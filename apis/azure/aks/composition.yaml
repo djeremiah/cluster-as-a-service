@@ -36,6 +36,8 @@ spec:
               - name: default
             identity:
               - type: "SystemAssigned"
+            apiServerAccessProfile:
+            - authorizedIpRanges: []
       patches:
         - type: PatchSet
           patchSetName: providerConfigRef
