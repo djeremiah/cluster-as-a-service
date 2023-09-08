@@ -37,7 +37,8 @@ spec:
             identity:
               - type: "SystemAssigned"
             apiServerAccessProfile:
-            - authorizedIpRanges: []
+            - authorizedIpRanges: 
+              - "192.168.1.0/24"
       patches:
         - type: PatchSet
           patchSetName: providerConfigRef
