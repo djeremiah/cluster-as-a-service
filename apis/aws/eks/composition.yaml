@@ -284,6 +284,27 @@ spec:
                 large: t3.large
         - fromFieldPath: spec.parameters.id
           toFieldPath: spec.forProvider.subnetIdSelector.matchLabels[networks.aws.caas.upbound.io/network-id]
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.resources[0].autoscalingGroups[0].name
+          toFieldPath: status.eks.nodeGroup.asg
+    - base:
+        apiVersion: autoscaling.aws.upbound.io/v1beta1
+        kind: AutoscalingGroup
+        spec:
+          managementPolicies: ['Observe']
+          forProvider: {}
+      name: autoscalingGroup
+      patches:
+        - type: PatchSet
+          patchSetName: providerConfigRef
+        - type: PatchSet
+          patchSetName: deletionPolicy
+        - type: PatchSet
+          patchSetName: region
+        - fromFieldPath: status.eks.nodeGroup.asg
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          policy:
+            fromFieldPath: Required
     - base:
         apiVersion: eks.aws.upbound.io/v1beta1
         kind: Addon
