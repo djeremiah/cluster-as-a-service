@@ -256,6 +256,10 @@ spec:
           set:
           - name: "ingress.host"
             value: "replace"
+          - name: "features.alpha.argocdPlugin.enabled"
+            value: "true"
+          - name: "features.alpha.argocdPlugin.target.namespace"
+            value: "argocd"
         rollbackLimit: 5
     patches:
     - fromFieldPath: status.loadBalancer
