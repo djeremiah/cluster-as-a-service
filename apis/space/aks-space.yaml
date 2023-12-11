@@ -196,7 +196,7 @@ spec:
             name: spaces
             repository: oci://us-west1-docker.pkg.dev/orchestration-build/upbound-environments
           values:
-            clusterType: eks
+            clusterType: aks
           set:
           - name: "ingress.host"
             value: "replace"
@@ -206,10 +206,6 @@ spec:
             value: "argocd"
         rollbackLimit: 5
     patches:
-    - fromFieldPath: status.loadBalancer
-      toFieldPath: spec.loadBalancerReady
-      policy:
-        fromFieldPath: Required
     - fromFieldPath: status.ingress
       toFieldPath: spec.ingressReady
       policy:
