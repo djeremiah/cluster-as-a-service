@@ -36,8 +36,6 @@ spec:
               - name: default
             identity:
               - type: "SystemAssigned"
-            apiServerAccessProfile:
-            - authorizedIpRanges: []
       patches:
         - type: PatchSet
           patchSetName: providerConfigRef
@@ -59,14 +57,8 @@ spec:
           toFieldPath: spec.forProvider.defaultNodePool[0].vnetSubnetIdSelector.matchLabels[azure.caas.upbound.io/network-id]
         - fromFieldPath: spec.parameters.id
           toFieldPath: spec.forProvider.dnsPrefix
-        - fromFieldPath: spec.parameters.nodes.size
+    - fromFieldPath: spec.parameters.nodes.instanceType
           toFieldPath: spec.forProvider.defaultNodePool[0].vmSize
-          transforms:
-            - type: map
-              map:
-                small: Standard_B2s
-                medium: Standard_B4ms
-                large: Standard_B8ms
         - fromFieldPath: spec.parameters.nodes.count
           toFieldPath: spec.forProvider.defaultNodePool[0].nodeCount
         - fromFieldPath: spec.writeConnectionSecretToRef.namespace
@@ -91,8 +83,6 @@ spec:
       patches:
         - fromFieldPath: spec.parameters.id
           toFieldPath: metadata.name
-        - type: PatchSet
-          patchSetName: deletionPolicy
         - fromFieldPath: spec.writeConnectionSecretToRef.namespace
           toFieldPath: spec.credentials.secretRef.namespace
         - fromFieldPath: metadata.uid
@@ -115,8 +105,6 @@ spec:
       patches:
         - fromFieldPath: spec.parameters.id
           toFieldPath: metadata.name
-        - type: PatchSet
-          patchSetName: deletionPolicy
         - fromFieldPath: spec.writeConnectionSecretToRef.namespace
           toFieldPath: spec.credentials.secretRef.namespace
         - fromFieldPath: metadata.uid

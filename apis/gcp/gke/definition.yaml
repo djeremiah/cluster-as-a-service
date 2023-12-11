@@ -33,7 +33,7 @@ spec:
                     type: string
                     description: Region is the region you'd like your resource to be created in.
                   deletionPolicy:
-                    description: When the Composition is deleleted, delelete the GCP resources. Defaults to Delete
+                    description: When the Composition is deleted, delete the GCP resources. Defaults to Delete
                     enum:
                     - Delete
                     - Orphan
@@ -54,16 +54,13 @@ spec:
                       count:
                         type: integer
                         description: Desired node count, from 1 to 100.
-                      size:
+                      instanceType:
                         type: string
-                        description: Size of node.
-                        enum:
-                        - small
-                        - medium
-                        - large
+                        description: instance types associated with the Node Group.
+                        default: n1-standard-4
                     required:
                     - count
-                    - size
+                    - instanceType
                 required:
                 - id
                 - region

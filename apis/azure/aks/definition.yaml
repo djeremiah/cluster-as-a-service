@@ -31,7 +31,7 @@ spec:
                     type: string
                     description: Region is the region you'd like your resource to be created in.
                   deletionPolicy:
-                    description: When the Composition is deleleted, delelete the Azure resources. Defaults to Delete
+                    description: When the Composition is deleted, delete the Azure resources. Defaults to Delete
                     enum:
                     - Delete
                     - Orphan
@@ -42,7 +42,7 @@ spec:
                     type: string
                     default: default
                   version:
-                    description: Kubernetes version 
+                    description: Kubernetes version
                     type: string
                     enum:
                     - "1.27.3"
@@ -56,16 +56,13 @@ spec:
                       count:
                         type: integer
                         description: Desired node count
-                      size:
+                      instanceType:
                         type: string
-                        description: Size of node.
-                        enum:
-                        - small
-                        - medium
-                        - large
+                        description: instance types associated with the Node Group.
+                        default: Standard_B2s
                     required:
                     - count
-                    - size
+                    - instanceType
                 required:
                 - id
                 - region
