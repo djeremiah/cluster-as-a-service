@@ -57,7 +57,7 @@ spec:
           toFieldPath: spec.forProvider.defaultNodePool[0].vnetSubnetIdSelector.matchLabels[azure.caas.upbound.io/network-id]
         - fromFieldPath: spec.parameters.id
           toFieldPath: spec.forProvider.dnsPrefix
-    - fromFieldPath: spec.parameters.nodes.instanceType
+        - fromFieldPath: spec.parameters.nodes.instanceType
           toFieldPath: spec.forProvider.defaultNodePool[0].vmSize
         - fromFieldPath: spec.parameters.nodes.count
           toFieldPath: spec.forProvider.defaultNodePool[0].nodeCount
