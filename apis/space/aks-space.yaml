@@ -93,10 +93,6 @@ spec:
             version: 1.13.2-up.2
         rollbackLimit: 5
     patches:
-    - fromFieldPath: status.loadBalancer
-      toFieldPath: spec.loadBalancerReady
-      policy:
-        fromFieldPath: Required
     - fromFieldPath: status.ingress
       toFieldPath: spec.ingressReady
       policy:
