@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: eks-space
+  name: aks-space
   labels:
     spaces.upbound.io/cluster-type: aks
 spec:
