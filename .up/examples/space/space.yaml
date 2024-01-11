@@ -1,10 +1,13 @@
 apiVersion: example.upbound.io/v1alpha1
 kind: Space
 metadata:
-  name: opusdavei-space
+  name: azure-space
 spec:
+  compositionSelector:
+    matchLabels:
+      spaces.upbound.io/cluster-type: aks
   parameters:
-    clusterId: opusdavei-space
+    clusterId: azure-spoke-02
     account: crossplane-by-example
     version: "1.1.0"
     host: proxy.upbound.opusdavei.org

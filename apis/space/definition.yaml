@@ -63,3 +63,5 @@ spec:
                 type: string
               ingress:
                 type: string
+              pullsecret:
+                type: string

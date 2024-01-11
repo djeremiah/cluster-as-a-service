@@ -12,8 +12,6 @@ spec:
     version: "1.27.3"
     nodes:
       count: 3
-      instanceType: Standard_B2s
-    gitops:
-      url: https://github.com/upbound/caas-cluster-configuration
+      instanceType: Standard_D4s_v4
   writeConnectionSecretToRef:
     name: azure-spoke-02-kubeconfig
