@@ -339,6 +339,8 @@ spec:
         toFieldPath: status.eks.loadBalancer.roleArn 
       - type: CombineFromComposite
         toFieldPath: spec.forProvider.assumeRolePolicy
+        policy:
+          fromFieldPath: Required
         combine:
           strategy: string
           variables:
