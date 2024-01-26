@@ -1,4 +1,4 @@
-apiVersion: aws.caas.upbound.io/v1alpha1
+apiVersion: aws.platform.upbound.io/v1alpha1
 kind: Cluster
 metadata:
   name: cbe-space-hc
