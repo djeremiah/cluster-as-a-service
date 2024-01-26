@@ -1,0 +1,16 @@
+apiVersion: aws.caas.upbound.io/v1alpha1
+kind: Cluster
+metadata:
+  name: cbe-space-hc
+  namespace: default
+spec:
+  parameters:
+    id: cbe-space-hc
+    region: eu-west-1
+    iam:
+      roleArn: arn:aws:iam::609897127049:role/AWSReservedSSO_AdministratorAccess_d703c73ed340fde7
+    nodes:
+      count: 3
+      instanceType: m5a.large
+  writeConnectionSecretToRef:
+    name: cbe-space-hc-kubeconfig
