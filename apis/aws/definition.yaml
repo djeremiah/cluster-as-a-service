@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xclusters.aws.platformref.upbound.io
+  name: xclusters.aws.platform.upbound.io
 spec:
   defaultCompositeDeletePolicy: Foreground
   group: aws.platform.upbound.io
