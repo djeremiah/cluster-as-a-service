@@ -67,7 +67,7 @@ spec:
             status:
               type: object
               properties:
-                subnetIds:
-                  type: array
-                  items:
-                    type: string
+                eks:
+                  type: object
+                  description: EKS cluster information
+                  x-kubernetes-preserve-unknown-fields: true
