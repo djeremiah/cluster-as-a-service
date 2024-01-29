@@ -93,8 +93,7 @@ spec:
         base:
           apiVersion: apiextensions.crossplane.io/v1alpha1
           kind: EnvironmentConfig
-          spec:
-            data: {} # patched
+          data: {} # patched
         readinessChecks:
           - type: None
         patches:
