@@ -40,9 +40,9 @@ spec:
           combine:
             strategy: string
             variables:
-            - fromFieldPath: data.eks.accountId
-            - fromFieldPath: data.eks.oidcUri
-            - fromFieldPath: data.eks.oidcUri
+            - fromFieldPath: eks.accountId
+            - fromFieldPath: eks.oidcUri
+            - fromFieldPath: eks.oidcUri
             string:
               fmt: |
                 {

@@ -30,6 +30,10 @@ spec:
                   clusterId:
                     description: ID of the cluster to deploy an ALB controller into
                     type: string
+                required:
+                - clusterId
+            required:
+            - parameters
           status:
             description: Most recently observed state of the Composite Resource
             type: object
