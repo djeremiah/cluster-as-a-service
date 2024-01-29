@@ -1,0 +1,39 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xalbs.aws.platform.upbound.io
+spec:
+  group: aws.platform.upbound.io
+  names:
+    kind: XALB
+    plural: xalbs
+  claimNames:
+    kind: ALB
+    plural: albs
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: ALB adds application load balancing capabilities to an existing EKS cluster
+        type: object
+        properties:
+          spec:
+            description: Specification of the desired state of the Composite Resource
+            type: object
+            properties:
+              parameters:
+                description: Configuration parameters for XALBs
+                type: object
+                properties:
+                  clusterId:
+                    description: ID of the cluster to deploy an ALB controller into
+                    type: string
+          status:
+            description: Most recently observed state of the Composite Resource
+            type: object
+            properties:
+              roleArn:
+                description: LoadBalander Role ARN
+                type: string
