@@ -7,16 +7,6 @@ spec:
   compositeTypeRef:
     apiVersion: aws.platform.upbound.io/v1alpha1
     kind: XALB
-  environment:
-    environmentConfigs:
-      - type: Selector
-        selector:
-          mode: Multiple
-          minMatch: 1
-          matchLabels:
-            - key: xeks.aws.platform.upbound.io/cluster-id
-              type: FromCompositeFieldPath
-              valueFromFieldPath: spec.parameters.clusterId
   mode: Pipeline
   pipeline:
   - step: patch-and-transform
@@ -26,56 +16,17 @@ spec:
       apiVersion: pt.fn.crossplane.io/v1beta1
       kind: Resources
       resources:
-      - name: loadbalancerRole
+      - name: loadbalancer-irsa
         base:
-          apiVersion: iam.aws.upbound.io/v1beta1
-          kind: Role
-          metadata:
-            labels: 
-              role: loadbalancer
-        patches:
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.arn
-          toFieldPath: status.roleArn 
-        - type: CombineFromEnvironment
-          toFieldPath: spec.forProvider.assumeRolePolicy
-          policy:
-            fromFieldPath: Required
-          combine:
-            strategy: string
-            variables:
-            - fromFieldPath: eks.accountId
-            - fromFieldPath: eks.oidcUri
-            - fromFieldPath: eks.oidcUri
-            string:
-              fmt: |
-                {
-                  "Version": "2012-10-17",
-                  "Statement": [
-                    {
-                      "Effect": "Allow",
-                      "Principal": {
-                        "Federated": "arn:aws:iam::%s:oidc-provider/%s"
-                      },
-                      "Action": "sts:AssumeRoleWithWebIdentity",
-                      "Condition": {
-                        "StringEquals": {
-                          "%s:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
-                        }
-                      }
-                    }
-                  ]
-                }
-      - name: loadbalancerPolicy
-        base:
-          apiVersion: iam.aws.upbound.io/v1beta1
-          kind: Policy
-          metadata:
-            labels: 
-              role: loadbalancer
-          spec: 
-            forProvider: 
-              policy: | 
+          apiVersion: aws.platform.upbound.io/v1alpha1
+          kind: XIRSA
+          spec:
+            parameters:
+              deletionPolicy: Delete
+              providerConfigName: default
+              id: clusterId # patched
+              condition: StringEquals
+              policyDocument: |
                 {
                   "Version": "2012-10-17",
                   "Statement": [
@@ -317,20 +268,17 @@ spec:
                     }
                   ]
                 }
-      - name: loadbalancerRolePolicyAttachment
-        base: 
-          apiVersion: iam.aws.upbound.io/v1beta1
-          kind: RolePolicyAttachment
-          spec: 
-            forProvider: 
-              roleSelector:
-                matchControllerRef: true
-                matchLabels: 
-                  role: loadbalancer
-              policyArnSelector: 
-                matchControllerRef: true
-                matchLabels: 
-                  role: loadbalancer
+              serviceAccount: 
+                name: aws-load-balancer-controller
+                namespace: kube-system
+        patches:
+        - fromFieldPath: spec.parameters.clusterId
+          toFieldPath: spec.parameters.id
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.roleArn
+          toFieldPath: status.roleArn
+          policy: 
+            fromFieldPath: Required
       - name: loadbalancer
         base: 
           apiVersion: helm.crossplane.io/v1beta1

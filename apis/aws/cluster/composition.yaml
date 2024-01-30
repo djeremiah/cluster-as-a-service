@@ -89,22 +89,6 @@ spec:
             toFieldPath: status.eks
             policy: 
               fromFieldPath: Required
-      - name: cluster-environment
-        base:
-          apiVersion: apiextensions.crossplane.io/v1alpha1
-          kind: EnvironmentConfig
-          data: {} # patched
-        readinessChecks:
-          - type: None
-        patches:
-          - type: FromCompositeFieldPath
-            fromFieldPath: spec.parameters.id
-            toFieldPath: metadata.labels[xeks.aws.platform.upbound.io/cluster-id]
-          - type: FromCompositeFieldPath
-            fromFieldPath: status.eks
-            toFieldPath: data.eks
-            policy:
-              fromFieldPath: Required
       - name: usageXEksByArbitraryLabeledRelease
         base:
           apiVersion: apiextensions.crossplane.io/v1alpha1
