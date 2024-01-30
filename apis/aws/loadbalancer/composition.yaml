@@ -11,6 +11,8 @@ spec:
     environmentConfigs:
       - type: Selector
         selector:
+          mode: Multiple
+          minMatch: 1
           matchLabels:
             - key: xeks.aws.platform.upbound.io/cluster-id
               type: FromCompositeFieldPath
@@ -42,9 +44,9 @@ spec:
           combine:
             strategy: string
             variables:
-            - fromFieldPath: data.eks.accountId
-            - fromFieldPath: data.eks.oidcUri
-            - fromFieldPath: data.eks.oidcUri
+            - fromFieldPath: eks.accountId
+            - fromFieldPath: eks.oidcUri
+            - fromFieldPath: eks.oidcUri
             string:
               fmt: |
                 {
@@ -346,7 +348,7 @@ spec:
                 serviceAccount:
                   name: aws-load-balancer-controller
                   annotations: {}    
-              rollbackLimit: 5  
+            rollbackLimit: 5  
         patches: 
         - fromFieldPath: metadata.name
           toFieldPath: spec.forProvider.values.clusterName
