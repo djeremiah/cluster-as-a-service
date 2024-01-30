@@ -12,6 +12,9 @@ spec:
     - configuration: xpkg.upbound.io/upbound/configuration-aws-eks
       # renovate: datasource=github-releases depName=upbound/configuration-aws-eks
       version: "v0.6.0"
+    - configuration: xpkg.upbound.io/upbound/configuration-aws-eks-irsa
+      # renovate: datasource=github-releases depName=upbound/configuration-aws-eks-irsa
+      version: "v0.4.1"
     - function: xpkg.upbound.io/upbound/function-patch-and-transform
       # renovate: datasource=github-releases depName=upbound/function-patch-and-transform
       version: "v0.2.1"
