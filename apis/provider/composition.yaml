@@ -8,22 +8,6 @@ spec:
     apiVersion: example.upbound.io/v1alpha1
     kind: XProvider
   resources:
-  - name: service-account
-    base:
-      apiVersion: kubernetes.crossplane.io/v1alpha1
-      kind: Object
-      spec:
-        forProvider:
-          manifest:
-            apiVersion: v1
-            kind: ServiceAccount
-            metadata:
-              namespace: upbound-system
-    patches:
-    - fromFieldPath: spec.parameters.providerName
-      toFieldPath: spec.forProvider.manifest.metadata.name
-    - fromFieldPath: spec.providerConfigRef.name
-      toFieldPath: spec.providerConfigRef.name
   - name: cluster-role-binding
     base:
       apiVersion: kubernetes.crossplane.io/v1alpha1
@@ -47,24 +31,20 @@ spec:
       toFieldPath: spec.forProvider.manifest.subjects[0].name
     - fromFieldPath: spec.providerConfigRef.name
       toFieldPath: spec.providerConfigRef.name
-  - name: controller-config
+  - name: deployment-runtime-config
     base:
       apiVersion: kubernetes.crossplane.io/v1alpha1
       kind: Object
       spec:
         forProvider:
           manifest:
-            apiVersion: pkg.crossplane.io/v1alpha1
-            kind: ControllerConfig
+            apiVersion: pkg.crossplane.io/v1beta1
+            kind: DeploymentRuntimeConfig
     patches:
     - fromFieldPath: spec.parameters.providerName
       toFieldPath: spec.forProvider.manifest.metadata.name
-      transforms:
-      - type: string
-        string:
-          fmt:  "%s-hub"
     - fromFieldPath: spec.parameters.providerName
-      toFieldPath: spec.forProvider.manifest.spec.serviceAccountName
+      toFieldPath: spec.forProvider.manifest.spec.serviceAccountTemplate.metadata.name
     - fromFieldPath: spec.providerConfigRef.name
       toFieldPath: spec.providerConfigRef.name
   - name: provider
@@ -76,16 +56,16 @@ spec:
           manifest:
             apiVersion: pkg.crossplane.io/v1
             kind: Provider
+            spec:
+              runtimeConfigRef:
+                apiVersion: pkg.crossplane.io/v1
+                kind: DeploymentRuntimeConfig
     patches:
     - fromFieldPath: spec.parameters.providerName
       toFieldPath: spec.forProvider.manifest.metadata.name
     - fromFieldPath: spec.parameters.providerPkg
       toFieldPath: spec.forProvider.manifest.spec.package
     - fromFieldPath: spec.parameters.providerName
-      toFieldPath: spec.forProvider.manifest.spec.controllerConfigRef.name
-      transforms:
-      - type: string
-        string:
-          fmt:  "%s-hub"
+      toFieldPath: spec.forProvider.manifest.spec.runtimeConfigRef.name
     - fromFieldPath: spec.providerConfigRef.name
       toFieldPath: spec.providerConfigRef.name

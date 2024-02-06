@@ -5,186 +5,110 @@ metadata:
     spaces.upbound.io/cluster-type: eks
   name: eks.xspaces.example.upbound.io
 spec:
+  writeConnectionSecretsToNamespace: upbound-system
   compositeTypeRef:
     apiVersion: example.upbound.io/v1alpha1
     kind: XSpace
   mode: Pipeline
   pipeline:
-  - functionRef:
-      name: upbound-function-patch-and-transform
+  - step: patch-and-transform
+    functionRef:
+      name: crossplane-contrib-function-patch-and-transform
     input:
       apiVersion: pt.fn.crossplane.io/v1beta1
       environment: null
       kind: Resources
-      patchSets: []
+      patchSets: 
+      - name: target-cluster
+        patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.clusterId
+          toFieldPath: spec.providerConfigRef.name
       resources:
-      - base:
+      - name: cert-manager
+        base:
           apiVersion: helm.crossplane.io/v1beta1
           kind: Release
           metadata:
             annotations:
               crossplane.io/external-name: cert-manager
+            labels:
+              platform.upbound.io/deletion-ordering: enabled
           spec:
             forProvider:
+              namespace: cert-manager
               chart:
                 name: cert-manager
                 repository: https://charts.jetstack.io
                 version: v1.13.1
-              namespace: cert-manager
               values:
                 installCRDs: true
-        name: cert-manager
         patches:
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
-          apiVersion: helm.crossplane.io/v1beta1
-          kind: Release
-          metadata:
-            annotations:
-              crossplane.io/external-name: aws-load-balancer-controller
-          spec:
-            forProvider:
-              chart:
-                name: aws-load-balancer-controller
-                repository: https://aws.github.io/eks-charts
-              namespace: kube-system
-              values:
-                serviceAccount:
-                  create: false
-                  name: aws-load-balancer-controller
-        name: aws-load-balancer-controller
-        patches:
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.forProvider.values.clusterName
-          type: FromCompositeFieldPath
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
-          apiVersion: kubernetes.crossplane.io/v1alpha1
-          kind: Object
-          spec:
-            forProvider:
-              manifest:
-                apiVersion: v1
-                kind: Endpoints
-                metadata:
-                  name: aws-load-balancer-webhook-service
-                  namespace: kube-system
-            managementPolicy: Observe
-        name: aws-load-balancer-controller-healthcheck
-        patches:
-        - fromFieldPath: status.atProvider.manifest.metadata.name
-          policy:
-            fromFieldPath: Required
-          toFieldPath: status.loadBalancer
-          transforms:
-          - map:
-              aws-load-balancer-webhook-service: Ready
-            type: map
-          type: ToCompositeFieldPath
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: ingress-nginx
+        base: 
           apiVersion: helm.crossplane.io/v1beta1
           kind: Release
           metadata:
             annotations:
               crossplane.io/external-name: ingress-nginx
+            labels:
+              platform.upbound.io/deletion-ordering: enabled
           spec:
             forProvider:
+              namespace: ingress-nginx
               chart:
                 name: ingress-nginx
                 repository: https://kubernetes.github.io/ingress-nginx
-                version: 4.7.1
-              namespace: ingress-nginx
+                version: "4.9.1"
               values:
                 controller:
                   service:
+                    type: LoadBalancer
                     annotations:
+                      service.beta.kubernetes.io/aws-load-balancer-type: external
+                      service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+                      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+                      service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: http
                       service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /healthz
                       service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "10254"
-                      service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: http
-                      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
-                      service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
-                      service.beta.kubernetes.io/aws-load-balancer-type: external
-                    type: LoadBalancer
-        name: ingress-nginx
         patches:
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
-          apiVersion: kubernetes.crossplane.io/v1alpha1
-          kind: Object
-          spec:
-            forProvider:
-              manifest:
-                apiVersion: v1
-                kind: Endpoints
-                metadata:
-                  name: ingress-nginx-controller-admission
-                  namespace: ingress-nginx
-            managementPolicy: Observe
-        name: ingress-nginx-healthcheck
-        patches:
-        - fromFieldPath: status.atProvider.manifest.metadata.name
-          policy:
-            fromFieldPath: Required
-          toFieldPath: status.ingress
-          transforms:
-          - map:
-              ingress-nginx-controller-admission: Ready
-            type: map
-          type: ToCompositeFieldPath
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: universal-crossplane
+        base:
           apiVersion: helm.crossplane.io/v1beta1
           kind: Release
           metadata:
             annotations:
               crossplane.io/external-name: universal-crossplane
+            labels:
+              platform.upbound.io/deletion-ordering: enabled
           spec:
             forProvider:
+              namespace: upbound-system
               chart:
                 name: universal-crossplane
                 repository: https://charts.upbound.io/stable
-                version: 1.13.2-up.2
-              namespace: upbound-system
+                version: 1.14.5-up.1
             rollbackLimit: 5
-        name: universal-crossplane
         patches:
-        - fromFieldPath: status.loadBalancer
-          policy:
-            fromFieldPath: Required
-          toFieldPath: spec.loadBalancerReady
-          type: FromCompositeFieldPath
-        - fromFieldPath: status.ingress
-          policy:
-            fromFieldPath: Required
-          toFieldPath: spec.ingressReady
-          type: FromCompositeFieldPath
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: provider-kubernetes
+        base:
           apiVersion: example.upbound.io/v1alpha1
           kind: XProvider
           spec:
             parameters:
               providerName: provider-kubernetes
-              providerPkg: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.9.0
-        name: provider-kubernetes
+              providerPkg: "xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.11.4"
         patches:
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: provider-kubernetes-providerconfig
+        base:
           apiVersion: kubernetes.crossplane.io/v1alpha1
           kind: Object
           spec:
@@ -196,25 +120,23 @@ spec:
                   name: upbound-cluster
                 spec:
                   credentials:
-                    source: InjectedIdentity
-        name: provider-kubernetes-providerconfig
+                      source: InjectedIdentity
         patches:
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: provider-helm
+        base:
           apiVersion: example.upbound.io/v1alpha1
           kind: XProvider
           spec:
             parameters:
               providerName: provider-helm
-              providerPkg: xpkg.upbound.io/crossplane-contrib/provider-helm:v0.15.0
-        name: provider-helm
+              providerPkg: "xpkg.upbound.io/crossplane-contrib/provider-helm:v0.16.0"
         patches:
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: provider-helm-providerconfig
+        base:
           apiVersion: kubernetes.crossplane.io/v1alpha1
           kind: Object
           spec:
@@ -226,89 +148,287 @@ spec:
                   name: upbound-cluster
                 spec:
                   credentials:
-                    source: InjectedIdentity
-        name: provider-helm-providerconfig
+                      source: InjectedIdentity
         patches:
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: upbound-pull-secret 
+        base:
           apiVersion: kubernetes.crossplane.io/v1alpha1
           kind: Object
-          spec:
+          spec: 
             forProvider:
               manifest:
                 apiVersion: v1
                 kind: Secret
+                type: kubernetes.io/dockerconfigjson
                 metadata:
                   name: upbound-pull-secret
                   namespace: upbound-system
-                type: kubernetes.io/dockerconfigjson
             references:
-            - patchesFrom:
+            - patchesFrom: 
                 apiVersion: v1
-                fieldPath: data[.dockerconfigjson]
                 kind: Secret
+                fieldPath: data[.dockerconfigjson]
               toFieldPath: data[.dockerconfigjson]
-        name: upbound-pull-secret
         patches:
         - fromFieldPath: spec.parameters.spacesPullSecretRef
-          policy:
+          toFieldPath: spec.references[0].patchesFrom
+          policy: 
             mergeOptions:
               keepMapValues: true
-          toFieldPath: spec.references[0].patchesFrom
-          type: FromCompositeFieldPath
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-      - base:
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: spaces
+        base:
           apiVersion: helm.crossplane.io/v1beta1
           kind: Release
-          metadata:
+          metadata: 
             annotations:
               crossplane.io/external-name: spaces
+            labels:
+              platform.upbound.io/deletion-ordering: enabled
           spec:
             forProvider:
+              namespace: upbound-system
               chart:
                 name: spaces
                 repository: oci://us-west1-docker.pkg.dev/orchestration-build/upbound-environments
-              namespace: upbound-system
-              set:
-              - name: ingress.host
-                value: replace
-              - name: features.alpha.argocdPlugin.enabled
-                value: "true"
-              - name: features.alpha.argocdPlugin.target.namespace
-                value: argocd
               values:
                 clusterType: eks
+              set:
+              - name: "ingress.host"
+                value: "replace"
+              - name: "features.alpha.argocdPlugin.enabled"
+                value: "true"
+              - name: "features.alpha.argocdPlugin.target.namespace"
+                value: "argocd"
             rollbackLimit: 5
-        name: spaces
         patches:
-        - fromFieldPath: status.loadBalancer
-          policy:
-            fromFieldPath: Required
-          toFieldPath: spec.loadBalancerReady
-          type: FromCompositeFieldPath
-        - fromFieldPath: status.ingress
-          policy:
-            fromFieldPath: Required
-          toFieldPath: spec.ingressReady
-          type: FromCompositeFieldPath
         - fromFieldPath: spec.parameters.helmCredentialsSecretRef
           toFieldPath: spec.forProvider.chart.pullSecretRef
-          type: FromCompositeFieldPath
         - fromFieldPath: spec.parameters.version
           toFieldPath: spec.forProvider.chart.version
-          type: FromCompositeFieldPath
         - fromFieldPath: spec.parameters.account
           toFieldPath: spec.forProvider.values.account
-          type: FromCompositeFieldPath
         - fromFieldPath: spec.parameters.host
           toFieldPath: spec.forProvider.set[0].value
-          type: FromCompositeFieldPath
-        - fromFieldPath: spec.parameters.clusterId
-          toFieldPath: spec.providerConfigRef.name
-          type: FromCompositeFieldPath
-    step: patch-and-transform
-  writeConnectionSecretsToNamespace: upbound-system
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "proxy.%s"
+        - type: PatchSet
+          patchSetName: target-cluster
+      - name: argocd
+        base:
+          apiVersion: helm.crossplane.io/v1beta1
+          kind: Release
+          metadata: 
+            annotations:
+              crossplane.io/external-name: argo-cd
+            labels:
+              platform.upbound.io/deletion-ordering: enabled
+          spec:
+            forProvider:
+              chart:
+                name: argo-cd
+                repository: https://argoproj.github.io/argo-helm
+              namespace: argocd
+              values:
+                applicationSet:
+                  metrics:
+                    enabled: true
+                    service:
+                      annotations:
+                        prometheus.io/scrape: true
+                  replicaCount: 1
+                configs:
+                  cm:
+                    application.resourceTrackingMethod: annotation
+                    resource.customizations: |
+                      "*.upbound.io/*":
+                        health.lua: |
+                          health_status = {
+                            status = "Progressing",
+                            message = "Provisioning ..."
+                          }
+
+                          if obj.status == nil or obj.status.conditions == nil then
+                            return health_status
+                          end
+
+                          for i, condition in ipairs(obj.status.conditions) do
+                            if condition.type == "LastAsyncOperation" then
+                              if condition.status == "False" then
+                                health_status.status = "Degraded"
+                                health_status.message = condition.message
+                                return health_status
+                              end
+                            end
+
+                            if condition.type == "Synced" then
+                              if condition.status == "False" then
+                                health_status.status = "Degraded"
+                                health_status.message = condition.message
+                                return health_status
+                              end
+                            end
+
+                            if condition.type == "Ready" then
+                              if condition.status == "True" then
+                                health_status.status = "Healthy"
+                                health_status.message = "Resource is up-to-date."
+                                return health_status
+                              end
+                            end
+                          end
+
+                          return health_status
+
+                      "*.crossplane.io/*":
+                        health.lua: |
+                          health_status = {
+                            status = "Progressing",
+                            message = "Provisioning ..."
+                          }
+
+                          if obj.status == nil or obj.status.conditions == nil then
+                            return health_status
+                          end
+
+                          for i, condition in ipairs(obj.status.conditions) do
+                            if condition.type == "LastAsyncOperation" then
+                              if condition.status == "False" then
+                                health_status.status = "Degraded"
+                                health_status.message = condition.message
+                                return health_status
+                              end
+                            end
+
+                            if condition.type == "Synced" then
+                              if condition.status == "False" then
+                                health_status.status = "Degraded"
+                                health_status.message = condition.message
+                                return health_status
+                              end
+                            end
+
+                            if condition.type == "Ready" then
+                              if condition.status == "True" then
+                                health_status.status = "Healthy"
+                                health_status.message = "Resource is up-to-date."
+                                return health_status
+                              end
+                            end
+                          end
+
+                          return health_status
+                    resource.exclusions: |
+                      - kinds:
+                        - ProviderConfigUsage
+                        apiGroups:
+                        - "*"
+                controller:
+                  env:
+                    - name: ARGOCD_K8S_CLIENT_QPS
+                      value: "300"
+                  metrics:
+                    enabled: true
+                    service:
+                      annotations:
+                        prometheus.io/scrape: true
+                  replicas: 1
+                redis-ha:
+                  enabled: true
+                repoServer:
+                  autoscaling:
+                    enabled: true
+                    minReplicas: 1
+                  metrics:
+                    enabled: true
+                    service:
+                      annotations:
+                        prometheus.io/scrape: true
+                  resources:
+                    limits:
+                      cpu: 200m
+                      memory: 512Mi
+                    requests:
+                      cpu: 100m
+                      memory: 256Mi
+                server:
+                  autoscaling:
+                    enabled: true
+                    minReplicas: 1
+                  metrics:
+                    enabled: true
+                    service:
+                      annotations:
+                        prometheus.io/scrape: true
+                  resources:
+                    limits:
+                      cpu: 200m
+                      memory: 512Mi
+                    requests:
+                      cpu: 100m
+                      memory: 256Mi
+                  ingress:
+                    enabled: true
+                    ingressClassName: nginx
+                    annotations:
+                      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+                      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+                      cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+                    hosts:
+                    - hostname # patched
+                    tls:
+                    - hosts:
+                      - hostname # patched
+                      secretName: argocd-tls
+                  ingressGrpc:
+                    enabled: true
+                    ingressClassName: nginx
+                    annotations:
+                      nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+                      cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+                    hosts:
+                    - grpc.hostname # patched
+                    tls:
+                    - hosts:
+                      - grpc.hostname # patched
+                      secretName: argocd-grpc-tls
+        patches:
+        - type: PatchSet
+          patchSetName: target-cluster
+        - fromFieldPath: spec.parameters.host
+          toFieldPath: spec.forProvider.values.server.ingress.hosts[0]
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "argocd.%s"
+        - fromFieldPath: spec.parameters.host
+          toFieldPath: spec.forProvider.values.server.ingress.tls[0].hosts[0]
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "argocd.%s"
+        - fromFieldPath: spec.parameters.host
+          toFieldPath: spec.forProvider.values.server.ingressGrpc.hosts[0]
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "grpc.argocd.%s"
+        - fromFieldPath: spec.parameters.argocd.host
+          toFieldPath: spec.forProvider.values.server.ingressGrpc.tls[0].hosts[0]
+          transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "grpc.argocd.%s"
+        
+          
+  

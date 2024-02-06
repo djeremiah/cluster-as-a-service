@@ -64,10 +64,3 @@ spec:
                     - region
               required:
                 - parameters
-            status:
-              type: object
-              properties:
-                eks:
-                  type: object
-                  description: EKS cluster information
-                  x-kubernetes-preserve-unknown-fields: true

@@ -34,7 +34,6 @@ spec:
           - type: FromCompositeFieldPath
             fromFieldPath: spec.parameters.region
             toFieldPath: spec.parameters.region
-
       - name: XEKS
         base:
           apiVersion: aws.platform.upbound.io/v1alpha1
@@ -84,11 +83,6 @@ spec:
           - type: FromCompositeFieldPath
             fromFieldPath: spec.parameters.iam.userArn
             toFieldPath: spec.parameters.iam.userArn
-          - type: ToCompositeFieldPath
-            fromFieldPath: status.eks
-            toFieldPath: status.eks
-            policy: 
-              fromFieldPath: Required
       - name: usageXEksByArbitraryLabeledRelease
         base:
           apiVersion: apiextensions.crossplane.io/v1alpha1
