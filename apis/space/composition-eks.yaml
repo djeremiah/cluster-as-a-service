@@ -379,7 +379,7 @@ spec:
                     annotations:
                       nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
                       nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-                      cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+                      cert-manager.io/cluster-issuer: spaces-selfsigned
                     hosts:
                     - hostname # patched
                     tls:
@@ -391,7 +391,7 @@ spec:
                     ingressClassName: nginx
                     annotations:
                       nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
-                      cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+                      cert-manager.io/cluster-issuer: spaces-selfsigned
                     hosts:
                     - grpc.hostname # patched
                     tls:
