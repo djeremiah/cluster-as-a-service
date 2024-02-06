@@ -172,11 +172,10 @@ spec:
                 fieldPath: data[.dockerconfigjson]
               toFieldPath: data[.dockerconfigjson]
         patches:
-        - fromFieldPath: spec.parameters.spacesPullSecretRef
-          toFieldPath: spec.references[0].patchesFrom
-          policy: 
-            mergeOptions:
-              keepMapValues: true
+        - fromFieldPath: spec.parameters.spacesPullSecretRef.name
+          toFieldPath: spec.references[0].patchesFrom.name
+        - fromFieldPath: spec.parameters.spacesPullSecretRef.namespace
+          toFieldPath: spec.references[0].patchesFrom.namespace
         - type: PatchSet
           patchSetName: target-cluster
       - name: spaces
