@@ -244,6 +244,8 @@ spec:
                         prometheus.io/scrape: true
                   replicaCount: 1
                 configs:
+                  params:
+                    server.insecure: true
                   cm:
                     application.resourceTrackingMethod: annotation
                     resource.customizations: |
